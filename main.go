@@ -4,13 +4,15 @@ import (
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 )
 
 // == Models ==
 type Person struct {
 	//auto increment id
-	ID        int    `json:"id"`
+	ID        string `json:"id"`
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Age       int    `json:"age"`
@@ -22,7 +24,7 @@ type Person struct {
 
 type Job struct {
 	//auto increment id
-	ID          int    `json:"id"`
+	ID          string `json:"id"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Salary      int    `json:"salary"`
@@ -39,22 +41,59 @@ func getPeople(w http.ResponseWriter, r *http.Request) {
 
 //get a single person
 func getPerson(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r) //get params
+	//Loop through people and find with ID, range is used to loop through data structures
+	for _, item := range people {
+		if item.ID == params["id"] {
+			json.NewEncoder(w).Encode(item)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Person{})
 }
 
 //create a new person
 func createPerson(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	var person Person
+	_ = json.NewDecoder(r.Body).Decode(&person)
+	// Create random ID - Mock ID
+	person.ID = strconv.Itoa(rand.Intn(10000))
+	people = append(people, person)
+	json.NewEncoder(w).Encode(&Person{})
 }
 
 //edit an existing person
 func editPerson(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	for index, item := range people {
+		if item.ID == params["id"] {
+			people = append(people[:index], people[index+1:]...)
+			var person Person
+			_ = json.NewDecoder(r.Body).Decode(&person)
+			// Create random ID - Mock ID
+			person.ID = params["id"]
+			people = append(people, person)
+			json.NewEncoder(w).Encode(&Person{})
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(people)
 }
 
 //delete a person
 func deletePerson(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	for index, item := range people {
+		if item.ID == params["id"] {
+			people = append(people[:index], people[index+1:]...)
+			break
+		}
+	}
+	json.NewEncoder(w).Encode(people)
 }
 
 //get all jobs
@@ -87,8 +126,8 @@ func main() {
 	r := mux.NewRouter()
 
 	//jobs as slices @todo implement DB
-	people = append(people, Person{ID: 1, FirstName: "Bianca", LastName: "Reusch", Age: 27, DateJoined: "now", DateUpdated: "later", Job: &Job{ID: 1, Title: "Back end Developer", Description: "working on back end", Salary: 45000}})
-	people = append(people, Person{ID: 2, FirstName: "Lisa", LastName: "Smith", Age: 29, DateJoined: "now", DateUpdated: "later", Job: &Job{ID: 2, Title: "Front end Developer", Description: "working on front end", Salary: 45000}})
+	people = append(people, Person{ID: "1", FirstName: "Bianca", LastName: "Reusch", Age: 27, DateJoined: "now", DateUpdated: "later", Job: &Job{ID: "1", Title: "Back end Developer", Description: "working on back end", Salary: 45000}})
+	people = append(people, Person{ID: "1", FirstName: "Lisa", LastName: "Smith", Age: 29, DateJoined: "now", DateUpdated: "later", Job: &Job{ID: "2", Title: "Front end Developer", Description: "working on front end", Salary: 45000}})
 
 	//Route Handlers / Endpoints
 	r.HandleFunc("/people", getPeople).Methods("GET")
