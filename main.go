@@ -112,15 +112,13 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 		FirstName := r.FormValue("firstName")
 		LastName := r.FormValue("lastName")
 		Age := r.FormValue("age")
-		DateJoined := time.Now
-		fmt.Println(FirstName)
+		DateJoined := time.Now()
 		insForm, err := db.Prepare("INSERT INTO person(first_name, last_name, age,date_joined) VALUES(?,?,?,?)")
 		ErrorCheck(err)
 		insForm.Exec(FirstName, LastName, Age, DateJoined)
-
+	defer db.Close()
 		fmt.Println("succesfully added person")
 	}
-	defer db.Close()
 	http.Redirect(w, r, "/", 301)
 }
 
@@ -160,6 +158,7 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 		insForm, err := db.Prepare("UPDATE person SET first_name=?,last_name=?, age=?, date_joined=? WHERE id=?")
 		ErrorCheck(err)
 		insForm.Exec(FirstName, LastName, Age, DateJoined, ID)
+
 		defer db.Close()
 		http.Redirect(w, r, "/", 301)
 	}
