@@ -2,11 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
+	"database/sql"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 // == Models ==
@@ -124,6 +127,13 @@ func deleteJob(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//Initialize Router
 	r := mux.NewRouter()
+	db, err := sql.Open("mysql","test:passw0rd@tcp(localhost:3306)/go_db")
+
+	if err != nil {
+		panic(err.Error())
+	}
+	defer db.Close()
+	fmt.Println("Succesfully connected to MySQL database")
 
 	//jobs as slices @todo implement DB
 	people = append(people, Person{ID: "1", FirstName: "Bianca", LastName: "Reusch", Age: 27, DateJoined: "now", DateUpdated: "later", Job: &Job{ID: "1", Title: "Back end Developer", Description: "working on back end", Salary: 45000}})
