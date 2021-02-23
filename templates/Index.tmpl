@@ -10,6 +10,7 @@
         <td>Last Name</td>
         <td>Age</td>
         <td>Date Joined</td>
+        <td>Date Updated</td>
         <td>View</td>
         <td>Edit</td>
         <td>Delete</td>
@@ -23,6 +24,7 @@
         <td>{{ .LastName }} </td>
         <td>{{ .Age }}</td>
         <td>{{ .DateJoined }}</td>
+        <td>{{ .DateUpdated }} </td>
         <td><a href="/showPerson?id={{ .ID }}">View</a></td>
         <td><a href="/editPerson?id={{ .ID }}">Edit</a></td>
         <td><a href="/deletePerson?id={{ .ID }}">Delete</a><td>

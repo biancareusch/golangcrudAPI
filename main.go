@@ -19,14 +19,15 @@ type Person struct {
 	LastName   string    `db:"last_name"`
 	Age        int       `db:"age"`
 	DateJoined time.Time `db:"date_joined"`
+	DateUpdated time.Time `db:"date_updated"`
 }
 
 type Job struct {
 	//auto increment id
-	ID          string
-	Title       string
-	Description string
-	Salary      int
+	ID          int		`db:"id`
+	Title       string	`db:"title"`
+	Description string	`db:"description"`
+	Salary      int		`db:"salary"`
 }
 
 //make connection to DB
@@ -61,13 +62,15 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		var FirstName, LastName string
 		var Age int
 		var DateJoined time.Time
-		err = selDB.Scan(&ID, &FirstName, &LastName, &Age, &DateJoined)
+		var DateUpdated time.Time
+		err = selDB.Scan(&ID, &FirstName, &LastName, &Age, &DateJoined, &DateUpdated)
 		ErrorCheck(err)
 		per.ID = ID
 		per.FirstName = FirstName
 		per.LastName = LastName
 		per.Age = Age
 		per.DateJoined = DateJoined
+		per.DateUpdated = DateUpdated
 		res = append(res, per)
 		fmt.Println(res)
 	}
@@ -87,13 +90,15 @@ func showPerson(w http.ResponseWriter, r *http.Request) {
 		var FirstName, LastName string
 		var Age int
 		var DateJoined time.Time
-		err = selDB.Scan(&ID, &FirstName, &LastName, &Age, &DateJoined)
+		var DateUpdated time.Time
+		err = selDB.Scan(&ID, &FirstName, &LastName, &Age, &DateJoined, &DateUpdated)
 		ErrorCheck(err)
 		per.ID = ID
 		per.FirstName = FirstName
 		per.LastName = LastName
 		per.Age = Age
 		per.DateJoined = DateJoined
+		per.DateUpdated = DateUpdated
 		fmt.Println(FirstName)
 	}
 	tmpl.ExecuteTemplate(w, "ShowPerson", per)
@@ -134,13 +139,15 @@ func showEditPerson(w http.ResponseWriter, r *http.Request) {
 		var FirstName, LastName string
 		var Age int
 		var DateJoined time.Time
-		err = selDB.Scan(&ID, &FirstName, &LastName, &Age, &DateJoined)
+		var DateUpdated time.Time
+		err = selDB.Scan(&ID, &FirstName, &LastName, &Age, &DateJoined, &DateUpdated)
 		ErrorCheck(err)
 		per.ID = ID
 		per.FirstName = FirstName
 		per.LastName = LastName
 		per.Age = Age
 		per.DateJoined = DateJoined
+		per.DateUpdated = time.Now()
 	}
 	tmpl.ExecuteTemplate(w, "Edit", per)
 	defer db.Close()
@@ -153,11 +160,11 @@ func updatePerson(w http.ResponseWriter, r *http.Request) {
 		FirstName := r.FormValue("firstName")
 		LastName := r.FormValue("lastName")
 		Age := r.FormValue("age")
-		DateJoined := time.Now()
+		DateUpdated := time.Now()
 		ID := r.FormValue("uid")
-		insForm, err := db.Prepare("UPDATE person SET first_name=?,last_name=?, age=?, date_joined=? WHERE id=?")
+		insForm, err := db.Prepare("UPDATE person SET first_name=?,last_name=?, age=?, date_updated=? WHERE id=?")
 		ErrorCheck(err)
-		insForm.Exec(FirstName, LastName, Age, DateJoined, ID)
+		insForm.Exec(FirstName, LastName, Age, DateUpdated, ID)
 
 		defer db.Close()
 		http.Redirect(w, r, "/", 301)
@@ -213,11 +220,11 @@ func main() {
 	http.HandleFunc("/updatePerson", updatePerson)
 	http.HandleFunc("/deletePerson", deletePerson)
 
-	r.HandleFunc("/jobs", getJobs).Methods("GET")
-	r.HandleFunc("/job/{id}", getJob).Methods("GET")
-	r.HandleFunc("/createJob", createJob).Methods("POST")
-	r.HandleFunc("/editJob/{id}", editJob).Methods("PUT")
-	r.HandleFunc("/deleteJob{id}", deleteJob).Methods("DELETE")
+	http.HandleFunc("/jobs", getJobs)
+	http.HandleFunc("/job", getJob)
+	http.HandleFunc("/createJob", createJob)
+	http.HandleFunc("/editJob", editJob)
+	http.HandleFunc("/deleteJob", deleteJob)
 
 	http.ListenAndServe(":8080", nil)
 	log.Fatal(http.ListenAndServe(":8080", r))
