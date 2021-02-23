@@ -1,0 +1,13 @@
+{{ define "New" }}
+  {{ template "Header" }}
+    {{ template "Menu" }}
+   <h2>New Person</h2>
+    <form method="POST" action="insert">
+      <label> First Name </label><input type="text" name="firstName" /><br />
+      <label> Last Name </label><input type="text" name="lastName" /><br />
+      <label> Age </label><input type="text" name="age" /><br />
+      <label> Date Joined</label><input type="text" name="dateJoined" /><br />
+      <input type="submit" value="Save user" />
+    </form>
+  {{ template "Footer" }}
+{{ end }}

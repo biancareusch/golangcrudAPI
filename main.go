@@ -1,102 +1,183 @@
 package main
 
 import (
-	"encoding/json"
+	"database/sql"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"log"
-	"math/rand"
 	"net/http"
-	"strconv"
-	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	"text/template"
+	_ "text/template"
+	"time"
 )
 
 // == Models ==
 type Person struct {
-	//auto increment id
-	ID        string `json:"id"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Age       int    `json:"age"`
-	// add timestamp
-	DateJoined  string `json:"dateJoined"`
-	DateUpdated string `json:"dateUpdated"`
-	Job         *Job   `json:"job"`
+	ID        int
+	FirstName string
+	LastName  string
+	Age       int
+	DateJoined  time.Time
 }
 
 type Job struct {
 	//auto increment id
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Salary      int    `json:"salary"`
+	ID          string
+	Title       string
+	Description string
+	Salary      int
+}
+//make connection to DB
+func dbConn()(db *sql.DB){
+	db, err := sql.Open("mysql","test:passw0rd@tcp(localhost:3306)/go_db")
+
+	if err != nil {
+		panic(err.Error())
+	}
+	//defer db.Close()
+	fmt.Println("Succesfully connected to MySQL database")
+	return db
 }
 
-// initialize jobs and people as slice
-var people []Person
+
+// get views
+var tmpl = template.Must(template.ParseGlob("templates/*"))
 
 //get all people
-func getPeople(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(people)
+func Index(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	selDB, err := db.Query("SELECT * FROM person")
+	if err != nil {
+		panic(err.Error())
+	}
+	per := Person{}
+	res := []Person{}
+	for selDB.Next(){
+		var ID int
+		var FirstName, LastName string
+		var Age int
+		var DateJoined time.Time
+		err = selDB.Scan(&ID, &FirstName, &LastName,&Age, &DateJoined)
+		if err != nil{
+			panic(err.Error())
+		}
+		per.ID = ID
+		per.FirstName = FirstName
+		per.LastName = LastName
+		per.Age = Age
+		per.DateJoined = DateJoined
+		res = append(res,per)
+	}
+	tmpl.ExecuteTemplate(w,"Index",res)
+	defer db.Close()
 }
 
 //get a single person
-func getPerson(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r) //get params
-	//Loop through people and find with ID, range is used to loop through data structures
-	for _, item := range people {
-		if item.ID == params["id"] {
-			json.NewEncoder(w).Encode(item)
-			return
-		}
+func showPerson(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	nId := r.URL.Query().Get("id")
+	selDB, err :=db.Query("SELECT * FROM person WHERE id=?",nId)
+	if err != nil{
+		panic(err.Error())
 	}
-	json.NewEncoder(w).Encode(&Person{})
+	per := Person{}
+	for selDB.Next(){
+		var ID int
+		var FirstName, LastName string
+		var Age int
+		var DateJoined time.Time
+		err = selDB.Scan(&ID, &Age, &FirstName, &LastName, &DateJoined)
+		if err != nil{
+			panic(err.Error())
+		}
+		per.ID = ID
+		per.FirstName = FirstName
+		per.LastName = LastName
+		per.Age = Age
+		per.DateJoined = DateJoined
+	}
+	tmpl.ExecuteTemplate(w,"ShowPerson",per)
+	defer db.Close()
 }
-
+//show create new Person Form
+func New(w http.ResponseWriter, r *http.Request){
+	tmpl.ExecuteTemplate(w,"New",nil)
+}
 //create a new person
 func createPerson(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var person Person
-	_ = json.NewDecoder(r.Body).Decode(&person)
-	// Create random ID - Mock ID
-	person.ID = strconv.Itoa(rand.Intn(10000))
-	people = append(people, person)
-	json.NewEncoder(w).Encode(&Person{})
-}
-
-//edit an existing person
-func editPerson(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	for index, item := range people {
-		if item.ID == params["id"] {
-			people = append(people[:index], people[index+1:]...)
-			var person Person
-			_ = json.NewDecoder(r.Body).Decode(&person)
-			// Create random ID - Mock ID
-			person.ID = params["id"]
-			people = append(people, person)
-			json.NewEncoder(w).Encode(&Person{})
-			return
+	db := dbConn()
+	if r.Method == "POST"{
+		FirstName := r.FormValue("firstName")
+		LastName := r.FormValue("lastName")
+		Age := r.FormValue("age")
+		DateJoined := time.Now()
+		insForm,err := db.Prepare("INSERT INTO person(first_name, last_name, age,date_joined) VALUES(?,?,?,?)")
+		if err != nil {
+			panic(err.Error())
 		}
+		insForm.Exec(FirstName,LastName,Age,DateJoined)
 	}
-	json.NewEncoder(w).Encode(people)
+	defer db.Close()
+	http.Redirect(w,r,"/",301)
 }
 
+//show edit
+func showEditPerson(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	nId := r.URL.Query().Get("id")
+	selDB, err := db.Query("SELECT * FROM person WHERE ID=?",nId)
+	if err != nil {
+		panic(err.Error())
+	}
+	per := Person{}
+	for selDB.Next(){
+		var ID int
+		var FirstName, LastName string
+		var Age int
+		var DateJoined time.Time
+		err = selDB.Scan(&ID, &Age, &FirstName, &LastName, &DateJoined)
+		if err != nil{
+			panic(err.Error())
+		}
+		per.ID = ID
+		per.FirstName = FirstName
+		per.LastName = LastName
+		per.Age = Age
+		per.DateJoined = DateJoined
+	}
+	tmpl.ExecuteTemplate(w,"Edit",per)
+	defer db.Close()
+}
+//update a person
+func updatePerson(w http.ResponseWriter, r *http.Request){
+	db := dbConn()
+	if r.Method == "POST"{
+		FirstName := r.FormValue("firstName")
+		LastName := r.FormValue("lastName")
+		Age := r.FormValue("age")
+		DateJoined := time.Now()
+		ID := r.FormValue("uid")
+		insForm, err := db.Prepare("UPDATE person SET first_name=?,last_name=?, age=?, date_joined=? WHERE id=?")
+		if err != nil{
+			panic(err.Error())
+		}
+		insForm.Exec(FirstName,LastName,Age,DateJoined,ID)
+		defer db.Close()
+		http.Redirect(w,r,"/",301)
+	}
+}
 //delete a person
 func deletePerson(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	params := mux.Vars(r)
-	for index, item := range people {
-		if item.ID == params["id"] {
-			people = append(people[:index], people[index+1:]...)
-			break
-		}
+	db := dbConn()
+	per := r.URL.Query().Get("id")
+	delForm, err := db.Prepare("DELETE FROM person WHERE id=?")
+	if err != nil {
+		panic(err.Error())
 	}
-	json.NewEncoder(w).Encode(people)
+	delForm.Exec(per)
+	defer db.Close()
+	http.Redirect(w,r,"/",301)
 }
 
 //get all jobs
@@ -127,24 +208,15 @@ func deleteJob(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//Initialize Router
 	r := mux.NewRouter()
-	db, err := sql.Open("mysql","test:passw0rd@tcp(localhost:3306)/go_db")
-
-	if err != nil {
-		panic(err.Error())
-	}
-	defer db.Close()
-	fmt.Println("Succesfully connected to MySQL database")
-
-	//jobs as slices @todo implement DB
-	people = append(people, Person{ID: "1", FirstName: "Bianca", LastName: "Reusch", Age: 27, DateJoined: "now", DateUpdated: "later", Job: &Job{ID: "1", Title: "Back end Developer", Description: "working on back end", Salary: 45000}})
-	people = append(people, Person{ID: "1", FirstName: "Lisa", LastName: "Smith", Age: 29, DateJoined: "now", DateUpdated: "later", Job: &Job{ID: "2", Title: "Front end Developer", Description: "working on front end", Salary: 45000}})
 
 	//Route Handlers / Endpoints
-	r.HandleFunc("/people", getPeople).Methods("GET")
-	r.HandleFunc("/person/{id}", getPerson).Methods("GET")
-	r.HandleFunc("/createPerson", createPerson).Methods("POST")
-	r.HandleFunc("/editPerson/{id}", editPerson).Methods("PUT")
-	r.HandleFunc("/deletePerson/{id}", deletePerson).Methods("DELETE")
+	http.HandleFunc("/", Index)
+	http.HandleFunc("/showPerson", showPerson)
+	http.HandleFunc("/newPerson",New)
+	http.HandleFunc("/createPerson", createPerson)
+	http.HandleFunc("/editPerson", showEditPerson)
+	http.HandleFunc("/updatePerson",updatePerson)
+	http.HandleFunc("/deletePerson", deletePerson)
 
 	r.HandleFunc("/jobs", getJobs).Methods("GET")
 	r.HandleFunc("/job/{id}", getJob).Methods("GET")
@@ -152,6 +224,6 @@ func main() {
 	r.HandleFunc("/editJob/{id}", editJob).Methods("PUT")
 	r.HandleFunc("/deleteJob{id}", deleteJob).Methods("DELETE")
 
-	http.ListenAndServe(":8080", r)
+	http.ListenAndServe(":8080", nil)
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
