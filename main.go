@@ -14,11 +14,11 @@ import (
 
 // == Models ==
 type Person struct {
-	ID        int
-	FirstName string
-	LastName  string
-	Age       int
-	DateJoined  time.Time
+	ID        int `db:"id"`
+	FirstName string `db:"first_name"`
+	LastName  string `db:"last_name"`
+	Age       int	`db:"age"`
+	DateJoined  time.Time `db:"date_joined"`
 }
 
 type Job struct {
@@ -30,7 +30,7 @@ type Job struct {
 }
 //make connection to DB
 func dbConn()(db *sql.DB){
-	db, err := sql.Open("mysql","test:passw0rd@tcp(localhost:3306)/go_db")
+	db, err := sql.Open("mysql","test:passw0rd@tcp(localhost:3306)/go_db?parseTime=true")
 
 	if err != nil {
 		panic(err.Error())
@@ -45,6 +45,7 @@ func dbConn()(db *sql.DB){
 var tmpl = template.Must(template.ParseGlob("templates/*"))
 
 //get all people
+
 func Index(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	selDB, err := db.Query("SELECT * FROM person")
@@ -52,7 +53,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 	per := Person{}
-	res := []Person{}
+	var res []Person
 	for selDB.Next(){
 		var ID int
 		var FirstName, LastName string
@@ -68,6 +69,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		per.Age = Age
 		per.DateJoined = DateJoined
 		res = append(res,per)
+		fmt.Println(res)
 	}
 	tmpl.ExecuteTemplate(w,"Index",res)
 	defer db.Close()
@@ -87,7 +89,7 @@ func showPerson(w http.ResponseWriter, r *http.Request) {
 		var FirstName, LastName string
 		var Age int
 		var DateJoined time.Time
-		err = selDB.Scan(&ID, &Age, &FirstName, &LastName, &DateJoined)
+		err = selDB.Scan(&ID,&FirstName, &LastName, &Age, &DateJoined)
 		if err != nil{
 			panic(err.Error())
 		}
@@ -96,6 +98,7 @@ func showPerson(w http.ResponseWriter, r *http.Request) {
 		per.LastName = LastName
 		per.Age = Age
 		per.DateJoined = DateJoined
+		fmt.Println(FirstName)
 	}
 	tmpl.ExecuteTemplate(w,"ShowPerson",per)
 	defer db.Close()
@@ -105,18 +108,20 @@ func New(w http.ResponseWriter, r *http.Request){
 	tmpl.ExecuteTemplate(w,"New",nil)
 }
 //create a new person
-func createPerson(w http.ResponseWriter, r *http.Request) {
+func Insert(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	if r.Method == "POST"{
 		FirstName := r.FormValue("firstName")
 		LastName := r.FormValue("lastName")
 		Age := r.FormValue("age")
-		DateJoined := time.Now()
+		DateJoined := time.Now
+		fmt.Println(FirstName)
 		insForm,err := db.Prepare("INSERT INTO person(first_name, last_name, age,date_joined) VALUES(?,?,?,?)")
 		if err != nil {
 			panic(err.Error())
 		}
-		insForm.Exec(FirstName,LastName,Age,DateJoined)
+		insForm.Exec(FirstName, LastName, Age, DateJoined)
+		fmt.Println("succesfully added person")
 	}
 	defer db.Close()
 	http.Redirect(w,r,"/",301)
@@ -136,7 +141,7 @@ func showEditPerson(w http.ResponseWriter, r *http.Request) {
 		var FirstName, LastName string
 		var Age int
 		var DateJoined time.Time
-		err = selDB.Scan(&ID, &Age, &FirstName, &LastName, &DateJoined)
+		err = selDB.Scan(&ID, &FirstName, &LastName, &Age, &DateJoined)
 		if err != nil{
 			panic(err.Error())
 		}
@@ -144,7 +149,7 @@ func showEditPerson(w http.ResponseWriter, r *http.Request) {
 		per.FirstName = FirstName
 		per.LastName = LastName
 		per.Age = Age
-		per.DateJoined = DateJoined
+		per.DateJoined= DateJoined
 	}
 	tmpl.ExecuteTemplate(w,"Edit",per)
 	defer db.Close()
@@ -213,7 +218,7 @@ func main() {
 	http.HandleFunc("/", Index)
 	http.HandleFunc("/showPerson", showPerson)
 	http.HandleFunc("/newPerson",New)
-	http.HandleFunc("/createPerson", createPerson)
+	http.HandleFunc("/insert", Insert)
 	http.HandleFunc("/editPerson", showEditPerson)
 	http.HandleFunc("/updatePerson",updatePerson)
 	http.HandleFunc("/deletePerson", deletePerson)

@@ -1,12 +1,12 @@
-{{ define "Show" }}
+{{ define "ShowPerson" }}
   {{ template "Header" }}
     {{ template "Menu"  }}
-    <h2> Register {{ .Id }} </h2>
+    <h2> Register {{ .ID }} </h2>
       <p>First Name: {{ .FirstName }}</p>
       <p>Last Name: {{ .LastName }}</p>
       <p>Age: {{ .Age }}</p>
-      <p>Date Joines: {{ .DateJoined }}</p>
+      <p>Date Joined: {{ .DateJoined }}</p>
       <br />
-      <a href="/editPerson?id={{ .Id }}">Edit</a></p>
+      <a href="/editPerson?id={{ .ID }}">Edit</a></p>
   {{ template "Footer" }}
 {{ end }}

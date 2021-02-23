@@ -3,7 +3,7 @@
     {{ template "Menu" }}
    <h2>Edit Name and City</h2>
     <form method="POST" action="update">
-      <input type="hidden" name="uid" value="{{ .Id }}" />
+      <input type="hidden" name="uid" value="{{ .ID }}" />
       <label> First Name </label><input type="text" name="firstName" value="{{ .FirstName }}"  /><br />
       <label> Last Name </label><input type="text" name="lastName" value="{{ .LastName }}"  /><br />
       <label> Age </label><input type="text" name="age" value="{{ .Age }}"  /><br />

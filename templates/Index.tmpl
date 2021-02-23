@@ -23,9 +23,9 @@
         <td>{{ .LastName }} </td>
         <td>{{ .Age }}</td>
         <td>{{ .DateJoined }}</td>
-        <td><a href="/showPerson?id={{ .Id }}">View</a></td>
-        <td><a href="/editPerson?id={{ .Id }}">Edit</a></td>
-        <td><a href="/deletePerson?id={{ .Id }}">Delete</a><td>
+        <td><a href="/showPerson?id={{ .ID }}">View</a></td>
+        <td><a href="/editPerson?id={{ .ID }}">Edit</a></td>
+        <td><a href="/deletePerson?id={{ .ID }}">Delete</a><td>
     </tr>
     {{ end }}
     </tbody>
