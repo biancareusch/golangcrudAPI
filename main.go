@@ -14,20 +14,20 @@ import (
 
 // == Models ==
 type Person struct {
-	ID         int       `db:"id"`
-	FirstName  string    `db:"first_name"`
-	LastName   string    `db:"last_name"`
-	Age        int       `db:"age"`
-	DateJoined time.Time `db:"date_joined"`
+	ID          int       `db:"id"`
+	FirstName   string    `db:"first_name"`
+	LastName    string    `db:"last_name"`
+	Age         int       `db:"age"`
+	DateJoined  time.Time `db:"date_joined"`
 	DateUpdated time.Time `db:"date_updated"`
 }
 
 type Job struct {
 	//auto increment id
-	ID          int		`db:"id`
-	Title       string	`db:"title"`
-	Description string	`db:"description"`
-	Salary      int		`db:"salary"`
+	ID          int    `db:"id`
+	Title       string `db:"title"`
+	Description string `db:"description"`
+	Salary      int    `db:"salary"`
 }
 
 //make connection to DB
@@ -35,17 +35,18 @@ func dbConn() (db *sql.DB) {
 	dbDriver := "mysql"
 	dbUser := "test"
 	dbPass := "passw0rd"
-	db, err := sql.Open(dbDriver, dbUser + ":" + dbPass + "@/go_db?parseTime=true")
+	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@/go_db?parseTime=true")
 	ErrorCheck(err)
 	fmt.Println("Succesfully connected to MySQL database")
 	return db
 }
 
-func ErrorCheck(err error){
+func ErrorCheck(err error) {
 	if err != nil {
 		panic(err.Error())
 	}
 }
+
 // get views
 var tmpl = template.Must(template.ParseGlob("templates/*"))
 
@@ -121,7 +122,7 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 		insForm, err := db.Prepare("INSERT INTO person(first_name, last_name, age,date_joined) VALUES(?,?,?,?)")
 		ErrorCheck(err)
 		insForm.Exec(FirstName, LastName, Age, DateJoined)
-	defer db.Close()
+		defer db.Close()
 		fmt.Println("succesfully added person")
 	}
 	http.Redirect(w, r, "/", 301)
@@ -131,7 +132,7 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 func showEditPerson(w http.ResponseWriter, r *http.Request) {
 	db := dbConn()
 	nId := r.URL.Query().Get("id")
-	selDB, err := db.Query("SELECT * FROM person WHERE ID=?", nId)
+	selDB, err := db.Query("SELECT * FROM person WHERE id=?", nId)
 	ErrorCheck(err)
 	per := Person{}
 	for selDB.Next() {
@@ -184,27 +185,117 @@ func deletePerson(w http.ResponseWriter, r *http.Request) {
 
 //get all jobs
 func getJobs(w http.ResponseWriter, r *http.Request) {
-
+	db := dbConn()
+	selDB, err := db.Query("SELECT * FROM job")
+	ErrorCheck(err)
+	job := Job{}
+	var res []Job
+	for selDB.Next() {
+		var ID int
+		var Title, Description string
+		var Salary int
+		err = selDB.Scan(&ID, &Title, &Description, &Salary)
+		ErrorCheck(err)
+		job.ID = ID
+		job.Title = Title
+		job.Description = Description
+		job.Salary = Salary
+		res = append(res, job)
+	}
+	tmpl.ExecuteTemplate(w, "Jobs", res)
+	defer db.Close()
 }
 
 //get a single job
 func getJob(w http.ResponseWriter, r *http.Request) {
-
+	db := dbConn()
+	nId := r.URL.Query().Get("id")
+	selDB, err := db.Query("SELECT * FROM job WHERE id=?", nId)
+	ErrorCheck(err)
+	job := Job{}
+	for selDB.Next() {
+		var ID int
+		var Title, Description string
+		var Salary int
+		err = selDB.Scan(&ID, &Title, &Description, &Salary)
+		ErrorCheck(err)
+		job.ID = ID
+		job.Title = Title
+		job.Description = Description
+		job.Salary = Salary
+	}
+	tmpl.ExecuteTemplate(w, "ShowJob", job)
+	defer db.Close()
+}
+func NewJob(w http.ResponseWriter, r *http.Request) {
+	tmpl.ExecuteTemplate(w, "NewJob", nil)
 }
 
 //create a new job
-func createJob(w http.ResponseWriter, r *http.Request) {
+func InsertJob(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	if r.Method == "POST" {
+		Title := r.FormValue("title")
+		Description := r.FormValue("description")
+		Salary := r.FormValue("salary")
+		insForm, err := db.Prepare("INSERT INTO job(title, description, salary) VALUES(?,?,?)")
+		ErrorCheck(err)
+		insForm.Exec(Title, Description, Salary)
+		defer db.Close()
+		fmt.Println("succesfully added job")
+	}
+	http.Redirect(w, r, "/jobs", 301)
+}
 
+//show edit job form
+func showEditJob(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	nId := r.URL.Query().Get("id")
+	selDB, err := db.Query("SELECT * FROM job WHERE id=?", nId)
+	ErrorCheck(err)
+	job := Job{}
+	for selDB.Next() {
+		var ID int
+		var Title string
+		var Description string
+		var Salary int
+		err = selDB.Scan(&ID, &Title, &Description, &Salary)
+		ErrorCheck(err)
+		job.ID = ID
+		job.Title = Title
+		job.Description = Description
+		job.Salary = Salary
+	}
+	tmpl.ExecuteTemplate(w, "EditJob", job)
 }
 
 //edit an existing job
-func editJob(w http.ResponseWriter, r *http.Request) {
+func updateJob(w http.ResponseWriter, r *http.Request) {
+	db := dbConn()
+	if r.Method == "POST" {
+		Title := r.FormValue("title")
+		Description := r.FormValue("description")
+		Salary := r.FormValue("salary")
+		ID := r.FormValue("uid")
+		insForm, err := db.Prepare("UPDATE job SET title=?,description=?,salary=? WHERE id=?")
+		ErrorCheck(err)
+		insForm.Exec(Title, Description, Salary, ID)
 
+		fmt.Println("successfully edited job!")
+		defer db.Close()
+		http.Redirect(w, r, "/jobs", 301)
+	}
 }
 
 //delete a job
 func deleteJob(w http.ResponseWriter, r *http.Request) {
-
+	db := dbConn()
+	job := r.URL.Query().Get("id")
+	delForm, err := db.Prepare("DELETE FROM job WHERE id=?")
+	ErrorCheck(err)
+	delForm.Exec(job)
+	defer db.Close()
+	http.Redirect(w, r, "/jobs", 301)
 }
 
 func main() {
@@ -221,9 +312,11 @@ func main() {
 	http.HandleFunc("/deletePerson", deletePerson)
 
 	http.HandleFunc("/jobs", getJobs)
-	http.HandleFunc("/job", getJob)
-	http.HandleFunc("/createJob", createJob)
-	http.HandleFunc("/editJob", editJob)
+	http.HandleFunc("/showJob", getJob)
+	http.HandleFunc("/newJob", NewJob)
+	http.HandleFunc("/insertJob", InsertJob)
+	http.HandleFunc("/editJob", showEditJob)
+	http.HandleFunc("/updateJob", updateJob)
 	http.HandleFunc("/deleteJob", deleteJob)
 
 	http.ListenAndServe(":8080", nil)

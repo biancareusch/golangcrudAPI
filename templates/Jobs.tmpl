@@ -1,0 +1,32 @@
+{{ define "Jobs" }}
+{{ template "Header" }}
+{{ template "Menu"  }}
+<h2> All Jobs</h2>
+<table border="1">
+    <thead>
+    <tr>
+        <td>ID</td>
+        <td>Title</td>
+        <td>Description</td>
+        <td>Salary</td>
+        <td>View</td>
+        <td>Edit</td>
+        <td>Delete</td>
+    </tr>
+    </thead>
+    <tbody>
+    {{ range . }}
+    <tr>
+        <td>{{ .ID }}</td>
+        <td> {{ .Title}} </td>
+        <td>{{ .Description }} </td>
+        <td>${{ .Salary }}</td>
+        <td><a href="/showJob?id={{ .ID }}">View</a></td>
+        <td><a href="/editJob?id={{ .ID }}">Edit</a></td>
+        <td><a href="/deleteJob?id={{ .ID }}">Delete</a><td>
+    </tr>
+    {{ end }}
+    </tbody>
+</table>
+{{ template "Footer" }}
+{{ end }}

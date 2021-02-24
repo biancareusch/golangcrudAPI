@@ -1,0 +1,13 @@
+{{ define "EditJob" }}
+  {{ template "Header" }}
+    {{ template "Menu" }}
+   <h2>Edit Name and City</h2>
+    <form method="POST" action="updateJob">
+      <input type="hidden" name="uid" value="{{ .ID }}" />
+      <label> Title </label><input type="text" name="title" value="{{ .Title }}"  /><br />
+      <label> Description</label><input type="text" name="description" value="{{ .Description }}"  /><br />
+      <label> Salary </label><input type="text" name="salary" value="{{ .Salary }}"  /><br />
+      <input type="submit" value="Save job" />
+    </form><br />
+  {{ template "Footer" }}
+{{ end }}

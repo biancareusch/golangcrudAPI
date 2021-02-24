@@ -1,0 +1,11 @@
+{{ define "ShowJob" }}
+  {{ template "Header" }}
+    {{ template "Menu"  }}
+    <h2> Register {{ .ID }} </h2>
+      <p>Title: {{ .Title }}</p>
+      <p>Description: {{ .Description }}</p>
+      <p>Salary: {{ .Salary}}</p>
+      <br />
+      <a href="/editJob?id={{ .ID }}">Edit</a></p>
+  {{ template "Footer" }}
+{{ end }}
