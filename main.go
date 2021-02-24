@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"text/template"
-	_ "text/template"
 	"time"
 )
 
