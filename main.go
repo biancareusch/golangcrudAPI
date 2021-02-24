@@ -37,7 +37,7 @@ func dbConn() (db *sql.DB) {
 	dbPass := "passw0rd"
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@/go_db?parseTime=true")
 	ErrorCheck(err)
-	fmt.Println("Succesfully connected to MySQL database")
+	fmt.Println("Successfully connected to MySQL database")
 	return db
 }
 
@@ -122,7 +122,7 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 		ErrorCheck(err)
 		insForm.Exec(FirstName, LastName, Age, DateJoined)
 		defer db.Close()
-		fmt.Println("succesfully added person")
+		fmt.Println("successfully added person")
 	}
 	http.Redirect(w, r, "/", 301)
 }
@@ -244,12 +244,12 @@ func InsertJob(w http.ResponseWriter, r *http.Request) {
 		Title := r.FormValue("title")
 		Description := r.FormValue("description")
 		Salary := r.FormValue("salary")
-		EmployeeID := 0;
+		EmployeeID := 0
 		insForm, err := db.Prepare("INSERT INTO job(title, description, salary, FK_person) VALUES(?,?,?,?)")
 		ErrorCheck(err)
 		insForm.Exec(Title, Description, Salary, EmployeeID)
 		defer db.Close()
-		fmt.Println("succesfully added job")
+		fmt.Println("successfully added job")
 	}
 	http.Redirect(w, r, "/jobs", 301)
 }
