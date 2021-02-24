@@ -9,6 +9,7 @@
         <td>Title</td>
         <td>Description</td>
         <td>Salary</td>
+        <td>Employee ID</td>
         <td>View</td>
         <td>Edit</td>
         <td>Delete</td>
@@ -21,6 +22,7 @@
         <td> {{ .Title}} </td>
         <td>{{ .Description }} </td>
         <td>${{ .Salary }}</td>
+        <td>{{ .EmployeeID }} </td>
         <td><a href="/showJob?id={{ .ID }}">View</a></td>
         <td><a href="/editJob?id={{ .ID }}">Edit</a></td>
         <td><a href="/deleteJob?id={{ .ID }}">Delete</a><td>
