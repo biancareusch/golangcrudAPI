@@ -83,3 +83,40 @@ func (r *repository) Find()([]*repo.UserModel,error){
 }
 
 //Create attaches the user repository and creates data
+func (r *repository) Create(user *repo.UserModel) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := "INSERT INTO person(id, first_name,last_name, age,date_joined,date_updated) VALUES(?,?,?,?,?,?)"
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_,err = stmt.ExecContext(
+		ctx,
+		user.ID,
+		user.FirstName,
+		user.LastName,
+		user.Age,
+		user.DateJoined,
+		user.DateUpdated)
+	return err
+}
+
+//Delete attaches the user repository and deletes data found by ID
+func (r *repository) Delete(id int) error{
+	ctx, cancel := context.WithTimeout(context.Background(),5*time.Second)
+	defer cancel()
+
+	query := "DELETE FROM person WHERE id = ?"
+	stmt, err := r.db.PrepareContext(ctx,query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, id)
+	return err
+}
