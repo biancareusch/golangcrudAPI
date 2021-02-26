@@ -26,8 +26,8 @@ VALUES('Bianca','Reusch',27,NOW()),
       ('Lisa','Smith',28,NOW()),
       ('Mark','Williams',33,NOW());
 
-INSERT INTO job(title, description, salary, FK_person) VALUES('Software Developer', 'looking for experiences software Developer', 65000,1),
-                                                             ('Backend Developer','looking fro experiences dev',75000,2);
+INSERT INTO job(title, description, salary, FK_person) VALUES('Software Developer', 'Software Dev experienced in Go	', 65000,1),
+                                                             ('Backend Developer','Backend Dev experienced in Go	',75000,2);
 
 INSERT INTO job(title, description, salary) VALUES('Software DeveloperNEW', 'looking for experiences software Developer', 65000),
                                                   ('Backend DeveloperNEW','looking fro experiences dev',75000);

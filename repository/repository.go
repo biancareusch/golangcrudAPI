@@ -1,7 +1,8 @@
 package repository
 
-import "time"
-
+import (
+	"time"
+)
 //Repository represent the repositories
 type Repository interface {
 	Close()
@@ -15,10 +16,10 @@ type Repository interface {
 //UserModel represent the user model
 
 type UserModel struct {
-	ID int
-	FirstName string
-	LastName string
-	Age int
-	DateJoined time.Time
-	DateUpdated time.Time
+	IDdb int
+	FirstNamedb string
+	LastNamedb string
+	Agedb int
+	DateJoineddb time.Time
+	DateUpdateddb time.Time
 }

@@ -37,13 +37,13 @@ func (r *repository) Close(){
 }
 
 //FindByID attaches the user repository and finds data based on id
-func (r *repository) FindByID(id int) (*repo.UserModel, error) {
+func (r *repository) FindByID(id string) (*repo.UserModel, error) {
 	user := new(repo.UserModel)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := r.db.QueryRowContext(ctx, "SELECT id, first_name, last_name,age,date_joined,date_updated FROM person WHERE id = ?").Scan(&user.ID, &user.FirstName, &user.LastName, &user.Age, &user.DateJoined,&user.DateUpdated)
+	err := r.db.QueryRowContext(ctx, "SELECT id, first_name, last_name,age,date_joined,date_updated FROM person WHERE id = ?").Scan(&user.IDdb, &user.FirstNamedb, &user.LastNamedb, &user.Agedb, &user.DateJoineddb,&user.DateUpdateddb)
 	if err != nil {
 		return nil, err
 	}
@@ -66,12 +66,12 @@ func (r *repository) Find()([]*repo.UserModel,error){
 	for rows.Next(){
 		user := new(repo.UserModel)
 		err = rows.Scan(
-			&user.ID,
-			&user.FirstName,
-			&user.LastName,
-			&user.Age,
-			&user.DateJoined,
-			&user.DateUpdated,
+			&user.IDdb,
+			&user.FirstNamedb,
+			&user.LastNamedb,
+			&user.Agedb,
+			&user.DateJoineddb,
+			&user.DateUpdateddb,
 		)
 
 		if err != nil {
@@ -96,17 +96,17 @@ func (r *repository) Create(user *repo.UserModel) error {
 
 	_,err = stmt.ExecContext(
 		ctx,
-		user.ID,
-		user.FirstName,
-		user.LastName,
-		user.Age,
-		user.DateJoined,
-		user.DateUpdated)
+		user.IDdb,
+		user.FirstNamedb,
+		user.LastNamedb,
+		user.Agedb,
+		user.DateJoineddb,
+		user.DateUpdateddb)
 	return err
 }
 
 //Delete attaches the user repository and deletes data found by ID
-func (r *repository) Delete(id int) error{
+func (r *repository) Delete(id string) error{
 	ctx, cancel := context.WithTimeout(context.Background(),5*time.Second)
 	defer cancel()
 
@@ -118,5 +118,26 @@ func (r *repository) Delete(id int) error{
 	defer stmt.Close()
 
 	_, err = stmt.ExecContext(ctx, id)
+	return err
+}
+
+// Update attaches the user repository and update data based on id
+func (r *repository) Update(user *repo.UserModel) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := "UPDATE person SET first_name = ?, last_name = ?,age = ?, date_joined = ?, date_updated = ? WHERE id = ?"
+	stmt, err := r.db.PrepareContext(ctx, query)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, user.IDdb,
+		user.FirstNamedb,
+		user.LastNamedb,
+		user.Agedb,
+		user.DateJoineddb,
+		user.DateUpdateddb)
 	return err
 }
