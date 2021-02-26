@@ -40,7 +40,8 @@ func TestFindByID(t *testing.T){
 
 	query := "SELECT id, first_name,last_name, age,date_joined,date_updated FROM person  WHERE id = \\?"
 
-	rows := sqlmock.NewRows([]string{"id","first_name","last_name", "age","date_joined","date_updated"}).AddRow(u.ID, u.FirstName, u.LastName, u.Age, u.DateJoined, u.DateUpdated)
+	rows := sqlmock.NewRows([]string{"id","first_name","last_name", "age","date_joined","date_updated"}).
+		AddRow(u.ID, u.FirstName, u.LastName, u.Age, u.DateJoined, u.DateUpdated)
 
 	mock.ExpectQuery(query).WithArgs(u.ID).WillReturnRows(rows)
 
@@ -68,3 +69,24 @@ func TestFindByIDError(t *testing.T){
 	assert.Empty(t, user)
 	assert.Error(t, err)
 }
+
+func TestFind(t *testing.T) {
+	db, mock := NewMock()
+	repo := &repository{db}
+	defer func() {
+		repo.Close()
+	}()
+
+	query := "SELECT id, first_name,last_name, age,date_joined,date_updated FROM person"
+
+	rows := sqlmock.NewRows([]string{"id","first_name","last_name", "age","date_joined","date_updated"}).
+		AddRow(u.ID, u.FirstName, u.LastName, u.Age, u.DateJoined, u.DateUpdated)
+
+	mock.ExpectQuery(query).WillReturnRows(rows)
+
+	users, err := repo.Find()
+	assert.NotEmpty(t, users)
+	assert.NoError(t, err)
+	assert.Len(t, users, 1)
+}
+
