@@ -106,3 +106,18 @@ func TestCreate(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestCreateError(t *testing.T) {
+	db, mock := NewMock()
+	repo := &repository{db}
+	defer func() {
+		repo.Close()
+	}()
+
+	query := "INSERT INTO person \\(id, first_name,last_name, age,date_joined,date_updated\\) VALUES \\(\\?, \\?, \\?,\\?,\\?, \\?\\)"
+
+	prep := mock.ExpectPrepare(query)
+	prep.ExpectExec().WithArgs(u.ID, u.FirstName, u.LastName, u.Age, u.DateJoined, u.DateUpdated).WillReturnResult(sqlmock.NewResult(0, 0))
+
+	err := repo.Create(u)
+	assert.Error(t, err)
+}
