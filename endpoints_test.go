@@ -68,3 +68,4 @@ func TestGetEntryByIDNotFound(t *testing.T) {
 			status, http.StatusBadRequest)
 	}
 }
+
