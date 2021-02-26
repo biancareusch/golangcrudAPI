@@ -42,4 +42,44 @@ func (r *repository) FindByID(id int) (*repo.UserModel, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
+
+	err := r.db.QueryRowContext(ctx, "SELECT id, first_name, last_name,age,date_joined,date_updated FROM person WHERE id = ?").Scan(&user.ID, &user.FirstName, &user.LastName, &user.Age, &user.DateJoined,&user.DateUpdated)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
+
+//Find attaches the user repository and finds its data
+func (r *repository) Find()([]*repo.UserModel,error){
+	users := make([]*repo.UserModel,0)
+
+	ctx, cancel := context.WithTimeout(context.Background(),5*time.Second)
+	defer cancel()
+
+	rows, err := r.db.QueryContext(ctx, "SELECT id, first_name, last_name,age,date_joined,date_updated FROM person")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next(){
+		user := new(repo.UserModel)
+		err = rows.Scan(
+			&user.ID,
+			&user.FirstName,
+			&user.LastName,
+			&user.Age,
+			&user.DateJoined,
+			&user.DateUpdated,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
+}
+
+//Create attaches the user repository and creates data
