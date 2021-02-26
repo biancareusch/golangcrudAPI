@@ -50,3 +50,21 @@ func TestFindByID(t *testing.T){
 	assert.NoError(t,err)
 }
 
+func TestFindByIDError(t *testing.T){
+	db, mock := NewMock()
+	repo := &repository{db}
+	defer func() {
+		repo.Close()
+	}()
+
+	query := "SELECT id, first_name,last_name, age,date_joined,date_updated FROM person WHERE id = \\?"
+
+	rows := sqlmock.NewRows([]string{"id","first_name","last_name", "age","date_joined","date_updated"})
+
+	mock.ExpectQuery(query).WithArgs(u.ID).WillReturnRows(rows)
+
+	uId, _ := strconv.Atoi(u.ID)
+	user, err := repo.FindByID(uId)
+	assert.Empty(t, user)
+	assert.Error(t, err)
+}
